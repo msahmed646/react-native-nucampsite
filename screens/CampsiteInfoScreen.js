@@ -1,27 +1,59 @@
 import { useState } from 'react';
-import { FlatList, StyleSheet, Text, View } from 'react-native';
-import { useSelector } from 'react-redux';
+import { FlatList, StyleSheet, Text, View, Button, Modal } from 'react-native';
+import { useSelector, useDispatch } from 'react-redux';
+import { Input, Rating } from 'react-native-elements';
 import RenderCampsite from '../features/campsites/RenderCampsite';
+import { postComment } from '../features/comments/commentsSlice';
 
 const CampsiteInfoScreen = ({ route }) => {
-    const { campsite } = route.params;
-    const comments = useSelector((state) => state.comments);
+  const { campsite } = route.params;
+  const comments = useSelector((state) => state.comments);
 
-    const [favorite, setFavorite] = useState(false);
+  const dispatch = useDispatch();
 
-    const renderCommentItem = ({ item }) => {
-        return (
-            <View style={styles.commentItem}>
-                <Text style={{ fontSize: 14 }}>{item.text}</Text>
-                <Text style={{ fontSize: 12 }}>{item.rating} Stars</Text>
-                <Text style={{ fontSize: 12 }}>
-                    {`-- ${item.author}, ${item.date}`}
-                </Text>
-            </View>
-        );
+  const [favorite, setFavorite] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [rating, setRating] = useState(5);
+  const [author, setAuthor] = useState('');
+  const [text, setText] = useState('');
+
+  const handleSubmit = () => {
+    const newComment = {
+        author,
+        rating,
+        text,
+        campsiteId: campsite.id
     };
 
+    dispatch(postComment(newComment));
+    setShowModal(!showModal);
+  };
+
+  const resetForm = () => {
+    setAuthor('');
+    setRating(5);
+    setText('');
+  };
+
+  const renderCommentItem = ({ item }) => {
     return (
+        <View style={styles.commentItem}>
+            <Text style={{ fontSize: 14 }}>{item.text}</Text>
+            <Rating
+                readonly
+                startingValue={item.rating}
+                imageSize={10}
+                style={{ alignItems: 'flex-start', paddingVertical: '5%' }}
+            />
+            <Text style={{ fontSize: 12 }}>
+                {`-- ${item.author}, ${item.date}`}
+            </Text>
+        </View>
+    );
+};
+
+return (
+    <>
         <FlatList
             data={comments.commentsArray.filter(
                 (comment) => comment.campsiteId === campsite.id
@@ -38,11 +70,70 @@ const CampsiteInfoScreen = ({ route }) => {
                         campsite={campsite}
                         isFavorite={favorite}
                         markFavorite={() => setFavorite(true)}
+                        onShowModal={() => setShowModal(!showModal)}
                     />
                     <Text style={styles.commentsTitle}>Comments</Text>
                 </>
             }
         />
+
+        <Modal
+            animationType="slide"
+            transparent={false}
+            visible={showModal}
+            onRequestClose={() => setShowModal(!showModal)}
+        >
+            <View style={styles.modal}>
+                <Rating 
+                    showRating
+                    startingValue={rating}
+                    imageSize={40}
+                    onFinishRating={(rating) => setRating(rating)}
+                    style={{ paddingVertical: 10 }}
+                />
+                <Input
+                    placeholder='Author'
+                    leftIcon={{ 
+                        type: 'font-awesome',
+                        name: 'user-o'
+                    }}
+                    leftIconContainerStyle= {{ paddingRight: 10 }}
+                    onChangeText={(author) => setAuthor(author)}
+                    value={author}
+                />
+                <Input
+                    placeholder="Comment"
+                    leftIcon={{ 
+                        type: 'font-awesome', 
+                        name: 'comment-o' 
+                    }}
+                    leftIconContainerStyle={{ paddingRight: 10 }}
+                    onChangeText={(text) => setText(text)}
+                    value={text}
+                />
+                <View style={{ margin: 10 }}>
+                    <Button 
+                        title='Submit'
+                        color='#5637DD'
+                        onPress={() => {
+                            handleSubmit();
+                            resetForm();
+                        }}
+                    />
+                </View>
+                <View style={{ margin: 10 }}>
+                    <Button
+                        color="#808080"
+                        title="CANCEL"
+                        onPress={() => {
+                            setShowModal(!showModal);
+                            resetForm();
+                        }}
+                    />
+                </View>
+            </View>
+        </Modal>
+        </>
     );
 };
 
@@ -60,7 +151,11 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         paddingHorizontal: 20,
         backgroundColor: '#fff'
-    }
+    },
+    modal: {
+        justifyContent: 'center',
+        margin: 20
+    },
 });
 
 export default CampsiteInfoScreen;
