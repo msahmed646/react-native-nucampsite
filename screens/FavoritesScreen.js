@@ -1,5 +1,12 @@
-import { useSelector, useDispatch } from 'react-redux';
-import { View, FlatList, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { useDispatch, useSelector } from 'react-redux';
+import {
+    View,
+    FlatList,
+    Text,
+    TouchableOpacity,
+    StyleSheet,
+    Alert
+} from 'react-native';
 import { Avatar, ListItem } from 'react-native-elements';
 import Loading from '../components/LoadingComponent';
 import { baseUrl } from '../shared/baseUrl';
@@ -17,12 +24,36 @@ const FavoritesScreen = ({ navigation }) => {
         return (
             <SwipeRow rightOpenValue={-100}>
                 <View style={styles.deleteView}>
-                    <TouchableOpacity 
+                    <TouchableOpacity
                         style={styles.deleteTouchable}
-                        onPress={() => dispatch(toggleFavorite(campsite.id))}
+                        onPress={() =>
+                            Alert.alert(
+                                'Delete Favorite?',
+                                'Are you sure you wish to delete the favorite campsite ' +
+                                    campsite.name +
+                                    '?',
+                                [
+                                    {
+                                        text: 'Cancel',
+                                        onPress: () =>
+                                            console.log(
+                                                campsite.name + 'Not Deleted'
+                                            ),
+                                        style: 'cancel'
+                                    },
+                                    {
+                                        text: 'OK',
+                                        onPress: () =>
+                                            dispatch(
+                                                toggleFavorite(campsite.id)
+                                            )
+                                    }
+                                ],
+                                { cancelable: false }
+                            )
+                        }
                     >
                         <Text style={styles.deleteText}>Delete</Text>
-
                     </TouchableOpacity>
                 </View>
                 <View>
@@ -34,7 +65,10 @@ const FavoritesScreen = ({ navigation }) => {
                             })
                         }
                     >
-                        <Avatar rounded source={{ uri: baseUrl + campsite.image }} />
+                        <Avatar
+                            rounded
+                            source={{ uri: baseUrl + campsite.image }}
+                        />
                         <ListItem.Content>
                             <ListItem.Title>{campsite.name}</ListItem.Title>
                             <ListItem.Subtitle>
@@ -43,7 +77,6 @@ const FavoritesScreen = ({ navigation }) => {
                         </ListItem.Content>
                     </ListItem>
                 </View>
-                
             </SwipeRow>
         );
     };
@@ -85,8 +118,9 @@ const styles = StyleSheet.create({
         color: 'white',
         fontWeight: '700',
         textAlign: 'center',
-        fontSize: 16, 
+        fontSize: 16,
         width: 100
     }
-})
+});
+
 export default FavoritesScreen;
